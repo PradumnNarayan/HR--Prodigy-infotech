@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stopwatch Web Application</title>
+  <style>
+    /* —— RESET & BASE —— */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      color: #eaeaea;
+      padding: 20px;
+    }
+
+    /* —— CONTAINER —— */
+    .stopwatch-container {
+      background: #16213e;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* —— DISPLAY —— */
+    .time-display {
+      font-size: 3rem;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* —— BUTTONS —— */
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .controls button {
+      background: #0f3460;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      color: #eaeaea;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .controls button:hover {
+      background: #533483;
+    }
+    .controls button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* —— LAP LIST —— */
+    .laps {
+      max-height: 200px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    .laps li {
+      padding: 6px 10px;
+      border-bottom: 1px solid #0f3460;
+      font-size: 0.9rem;
+    }
+    .laps li:nth-child(even) {
+      background: #0f3460;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stopwatch-container">
+    <h2>Stopwatch</h2>
+    <div class="time-display" id="display">00:00:00.00</div>
+
+    <div class="controls">
+      <button id="startBtn">Start</button>
+      <button id="lapBtn" disabled>Lap</button>
+      <button id="stopBtn" disabled>Stop</button>
+      <button id="resetBtn" disabled>Reset</button>
+    </div>
+
+    <ol class="laps" id="lapsList"></ol>
+  </div>
+
+
+  <script>
+    // —— ELEMENTS —— 
+    const display = document.getElementById('display');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn  = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const lapBtn   = document.getElementById('lapBtn');
+    const lapsList = document.getElementById('lapsList');
+
+    // —— STATE —— 
+    let startTime = 0;
+    let elapsed   = 0;
+    let timerId   = null;
+    let lapCount  = 0;
+
+    // —— FORMAT TIME —— 
+    function formatTime(ms) {
+      const cs = Math.floor((ms % 1000) / 10);             // centiseconds
+      const secs = Math.floor(ms / 1000) % 60;
+      const mins = Math.floor(ms / 60000) % 60;
+      const hrs  = Math.floor(ms / 3600000);
+      const pad = (n, z=2) => n.toString().padStart(z, '0');
+      return `${pad(hrs)}:${pad(mins)}:${pad(secs)}.${pad(cs)}`;
+    }
+
+    // —— UPDATE DISPLAY —— 
+    function update() {
+      elapsed = Date.now() - startTime;
+      display.textContent = formatTime(elapsed);
+    }
+
+    // —— START —— 
+    startBtn.addEventListener('click', () => {
+      startTime = Date.now() - elapsed;
+      timerId = setInterval(update, 10);
+      startBtn.disabled = true;
+      stopBtn.disabled  = false;
+      resetBtn.disabled = false;
+      lapBtn.disabled   = false;
+    });
+
+    // —— STOP —— 
+    stopBtn.addEventListener('click', () => {
+      clearInterval(timerId);
+      startBtn.disabled = false;
+      stopBtn.disabled  = true;
+      lapBtn.disabled   = true;
+    });
+
+    // —— RESET —— 
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerId);
+      elapsed = 0;
+      display.textContent = '00:00:00.00';
+      lapsList.innerHTML = '';
+      lapCount = 0;
+      startBtn.disabled = false;
+      stopBtn.disabled  = true;
+      resetBtn.disabled = true;
+      lapBtn.disabled   = true;
+    });
+
+    // —— LAP —— 
+    lapBtn.addEventListener('click', () => {
+      lapCount++;
+      const li = document.createElement('li');
+      li.textContent = `Lap ${lapCount}: ${ formatTime(elapsed) }`;
+      lapsList.appendChild(li);
+      // scroll into view
+      lapsList.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+    });
+  </script>
+
+</body>
+</html>
